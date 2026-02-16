@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Folha de Pagamento - Versão Completa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .toolbar {
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .toolbar-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .toolbar-group select, .toolbar-group input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background: #f1f3f5;
+            padding: 10px 10px 0 10px;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: #dee2e6;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: #ced4da;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cadastro-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .cadastro-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cadastro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checklist-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checklist-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checklist-item label {
+            font-size: 14px;
+            color: #4a5568;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f7fafc;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover td {
+            background: #f7fafc;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-warning {
+            background: #feebc8;
+            color: #744210;
+        }
+
+        .badge-danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-card h4 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .checklist-progress {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .checklist-progress-bar {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+
+        .close-btn:hover {
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .toolbar-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                border-radius: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sistema Completo de Folha de Pagamento</h1>
+            <p>Controle total de apontamentos, colaboradores, benefícios e obrigações</p>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <label>Competência:</label>
+                <input type="month" id="competenciaGlobal" value="2025-02">
+            </div>
+            
+            <div class="toolbar-group">
+                <label>Colaborador:</label>
+                <select id="filtroColaborador">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            
+            <div class="toolbar-group">
+                <label>Departamento:</label>
+                <select id="filtroDepartamento">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            
+            <div class="toolbar-group">
+                <label>Empresa:</label>
+                <select id="filtroEmpresa">
+                    <option value="">Todas</option>
+                    <option value="Empresa A">Empresa A</option>
+                    <option value="Empresa B">Empresa B</option>
+                    <option value="Empresa C">Empresa C</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" onclick="aplicarFiltros()">
+                🔍 Aplicar Filtros
+            </button>
+            
+            <button class="btn btn-success" onclick="exportarDados()">
+                📥 Exportar Dados
+            </button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="abrirAba(event, 'dashboard')">📊 Dashboard</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'colaboradores')">👥 Colaboradores</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'departamentos')">🏢 Departamentos</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'apontamentos')">📋 Apontamentos</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'beneficios')">🎁 Benefícios</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'descontos')">💰 Descontos</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'provisoes')">📈 Provisões</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'guias')">📄 Guias</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'atestados')">🩺 Atestados</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'pensoes')">⚖️ Pensões</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'emprestimos')">💵 Empréstimos</button>
+            <button class="tab-btn" onclick="abrirAba(event, 'coparticipacao')">🔄 Coparticipação</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Colaboradores</h4>
+                    <div class="number" id="totalColaboradores">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Departamentos</h4>
+                    <div class="number" id="totalDepartamentos">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Apontamentos Mês</h4>
+                    <div class="number" id="totalApontamentos">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Valor Total Folha</h4>
+                    <div class="number" id="valorTotalFolha">R$ 0</div>
+                </div>
+            </div>
+
+            <div class="cadastro-section">
+                <div class="cadastro-title">📊 Resumo da Competência</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Indicador</th>
+                                <th>Quantidade</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaResumo">
+                            <tr>
+                                <td>Colaboradores Ativos</td>
+                                <td id="resumoAtivos">0</td>
+                                <td id="resumoValorAtivos">R$ 0</td>
+                                <td><span class="badge badge-success">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td>Colaboradores Inativos</td>
+                                <td id="resumoInativos">0</td>
+                                <td id="resumoValorInativos">R$ 0</td>
+                                <td><span class="badge badge-danger">Inativo</span></td>
+                            </tr>
+                            <tr>
+                                <td>Apontamentos Pendentes</td>
+                                <td id="resumoPendentes">0</td>
+                                <td id="resumoValorPendentes">R$ 0</td>
+                                <td><span class="badge badge-warning">Pendente</span></td>
+                            </tr>
+                            <tr>
+                                <td>Apontamentos Concluídos</td>
+                                <td id="resumoConcluidos">0</td>
+                                <td id="resumoValorConcluidos">R$ 0</td>
+                                <td><span class="badge badge-success">Concluído</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="cadastro-section">
+                <div class="cadastro-title">✅ Checklists Consolidados</div>
+                <div class="checklist-grid" id="dashboardChecklists"></div>
+            </div>
+        </div>
+
+        <!-- COLABORADORES -->
+        <div id="colaboradores" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">
+                    👥 Cadastro de Colaboradores
+                    <button class="btn btn-primary" onclick="mostrarModalColaborador()">+ Novo Colaborador</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="tabelaColaboradores">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Departamento</th>
+                                <th>Empresa</th>
+                                <th>Cargo</th>
+                                <th>Salário</th>
+                                <th>Admissão</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaColaboradores"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEPARTAMENTOS -->
+        <div id="departamentos" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">
+                    🏢 Cadastro de Departamentos
+                    <button class="btn btn-primary" onclick="mostrarModalDepartamento()">+ Novo Departamento</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="tabelaDepartamentos">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Centro de Custo</th>
+                                <th>Gestor</th>
+                                <th>Qtd Colaboradores</th>
+                                <th>Orçamento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaDepartamentos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- APONTAMENTOS -->
+        <div id="apontamentos" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">📋 Apontamentos da Folha</div>
+
+                <div class="cadastro-grid">
+                    <div class="form-group">
+                        <label>Colaborador:</label>
+                        <select id="apontamentoColaborador">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo:</label>
+                        <select id="apontamentoTipo">
+                            <option>Horas Extras 50%</option>
+                            <option>Horas Extras 100%</option>
+                            <option>Falta</option>
+                            <option>Atestado</option>
+                            <option>Férias</option>
+                            <option>13º Salário</option>
+                            <option>Outros Descontos</option>
+                            <option>Reembolso</option>
+                            <option>Adicional Noturno</option>
+                            <option>Periculosidade</option>
+                            <option>Insalubridade</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Valor (R$):</label>
+                        <input type="number" id="apontamentoValor" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Quantidade:</label>
+                        <input type="number" id="apontamentoQuantidade" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Parcelas:</label>
+                        <input type="text" id="apontamentoParcelas" placeholder="ex: 1/3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Observações:</label>
+                        <textarea id="apontamentoObs" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="checklist-container">
+                    <div class="checklist-title">✅ Checklist do Apontamento</div>
+                    <div class="checklist-grid" id="checklistApontamento"></div>
+                </div>
+
+                <button class="btn btn-success" onclick="adicionarApontamento()">
+                    ✅ Adicionar Apontamento
+                </button>
+
+                <div class="table-container">
+                    <table id="tabelaApontamentos">
+                        <thead>
+                            <tr>
+                                <th>Check</th>
+                                <th>Colaborador</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Qtd</th>
+                                <th>Parcelas</th>
+                                <th>Competência</th>
+                                <th>Obs</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaApontamentos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- BENEFÍCIOS -->
+        <div id="beneficios" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">🎁 Controle de Benefícios</div>
+
+                <!-- Vale Transporte -->
+                <div class="checklist-container">
+                    <div class="checklist-title">🚌 Vale Transporte</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="vtColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Salário Base:</label>
+                            <input type="number" id="vtSalario" step="0.01" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Desconto 6%:</label>
+                            <input type="number" id="vtDescontoAuto" step="0.01" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Desconto Manual:</label>
+                            <input type="number" id="vtDescontoManual" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Quantidade de Vales:</label>
+                            <input type="number" id="vtQuantidade" value="22">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarVT()">Adicionar VT</button>
+                    <div class="checklist-grid" id="checklistVT"></div>
+                </div>
+
+                <!-- Plano de Saúde -->
+                <div class="checklist-container">
+                    <div class="checklist-title">❤️ Plano de Saúde</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="saudeColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Titular:</label>
+                            <input type="number" id="saudeTitular" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Qtd Dependentes:</label>
+                            <input type="number" id="saudeQtdDep" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor por Dependente:</label>
+                            <input type="number" id="saudeValorDep" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Total (calculado):</label>
+                            <input type="number" id="saudeTotal" step="0.01" readonly>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarSaude()">Adicionar Plano</button>
+                    <div class="checklist-grid" id="checklistSaude"></div>
+                </div>
+
+                <!-- Plano Odontológico -->
+                <div class="checklist-container">
+                    <div class="checklist-title">🦷 Plano Odontológico</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="odontoColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor do Plano:</label>
+                            <input type="number" id="odontoValor" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Qtd Dependentes:</label>
+                            <input type="number" id="odontoDependentes" value="0">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarOdonto()">Adicionar Plano</button>
+                    <div class="checklist-grid" id="checklistOdonto"></div>
+                </div>
+
+                <!-- Home Office -->
+                <div class="checklist-container">
+                    <div class="checklist-title">🏠 Auxílio Home Office</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="homeColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor do Auxílio:</label>
+                            <input type="number" id="homeValor" value="150.00" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarHomeOffice()">Adicionar Auxílio</button>
+                    <div class="checklist-grid" id="checklistHome"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESCONTOS -->
+        <div id="descontos" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">💰 Controle de Descontos</div>
+
+                <!-- Empréstimos -->
+                <div class="checklist-container">
+                    <div class="checklist-title">💵 Empréstimos Consignados</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="emprestimoColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Parcela:</label>
+                            <input type="number" id="emprestimoValor" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Parcelas:</label>
+                            <input type="number" id="emprestimoTotal" min="1" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Parcela Atual:</label>
+                            <input type="number" id="emprestimoAtual" min="1" value="1">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarEmprestimo()">Adicionar Empréstimo</button>
+                    <div class="checklist-grid" id="checklistEmprestimos"></div>
+                </div>
+
+                <!-- Pensão Alimentícia -->
+                <div class="checklist-container">
+                    <div class="checklist-title">⚖️ Pensão Alimentícia</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="pensaoColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Valor:</label>
+                            <input type="number" id="pensaoValor" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Percentual (%):</label>
+                            <input type="number" id="pensaoPercentual" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Beneficiário:</label>
+                            <input type="text" id="pensaoBeneficiario">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarPensao()">Adicionar Pensão</button>
+                    <div class="checklist-grid" id="checklistPensao"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROVISÕES -->
+        <div id="provisoes" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">📈 Provisões e Encargos</div>
+
+                <!-- 13º Salário -->
+                <div class="checklist-container">
+                    <div class="checklist-title">🎄 13º Salário</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="decimoColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Meses Trabalhados:</label>
+                            <input type="number" id="decimoMeses" min="1" max="12" value="12">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor Médio:</label>
+                            <input type="number" id="decimoValor" step="0.01" readonly>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="calcularDecimo()">Calcular 13º</button>
+                    <div class="checklist-grid" id="checklistDecimo"></div>
+                </div>
+
+                <!-- Férias -->
+                <div class="checklist-container">
+                    <div class="checklist-title">🏖️ Férias</div>
+                    <div class="cadastro-grid">
+                        <div class="form-group">
+                            <label>Colaborador:</label>
+                            <select id="feriasColaborador">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Período Aquisitivo:</label>
+                            <input type="text" id="feriasPeriodo" placeholder="2024-2025">
+                        </div>
+                        <div class="form-group">
+                            <label>Dias:</label>
+                            <input type="number" id="feriasDias" value="30" min="1" max="30">
+                        </div>
+                        <div class="form-group">
+                            <label>Abono Pecuniário:</label>
+                            <select id="feriasAbono">
+                                <option value="nao">Não</option>
+                                <option value="sim">Sim (10 dias)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="calcularFerias()">Calcular Férias</button>
+                    <div class="checklist-grid" id="checklistFerias"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GUIAS -->
+        <div id="guias" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">📄 Controle de Guias</div>
+
+                <div class="checklist-container">
+                    <div class="checklist-title">✅ Checklist de Guias</div>
+                    <div class="checklist-grid" id="checklistGuias"></div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Guia</th>
+                                <th>Competência</th>
+                                <th>Vencimento</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Check</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaGuias">
+                            <tr>
+                                <td>GPS (INSS)</td>
+                                <td>02/2025</td>
+                                <td>20/03/2025</td>
+                                <td>R$ 5.234,50</td>
+                                <td><span class="badge badge-warning">Pendente</span></td>
+                                <td><input type="checkbox"></td>
+                            </tr>
+                            <tr>
+                                <td>FGTS</td>
+                                <td>02/2025</td>
+                                <td>07/03/2025</td>
+                                <td>R$ 3.890,00</td>
+                                <td><span class="badge badge-success">Pago</span></td>
+                                <td><input type="checkbox" checked></td>
+                            </tr>
+                            <tr>
+                                <td>IRRF</td>
+                                <td>02/2025</td>
+                                <td>20/03/2025</td>
+                                <td>R$ 1.450,30</td>
+                                <td><span class="badge badge-danger">Atrasado</span></td>
+                                <td><input type="checkbox"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATESTADOS -->
+        <div id="atestados" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">🩺 Controle de Atestados</div>
+
+                <div class="cadastro-grid">
+                    <div class="form-group">
+                        <label>Colaborador:</label>
+                        <select id="atestadoColaborador">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Início:</label>
+                        <input type="date" id="atestadoDataInicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Data Fim:</label>
+                        <input type="date" id="atestadoDataFim">
+                    </div>
+                    <div class="form-group">
+                        <label>Dias:</label>
+                        <input type="number" id="atestadoDias" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>CID:</label>
+                        <input type="text" id="atestadoCID">
+                    </div>
+                    <div class="form-group">
+                        <label>Médico/CRM:</label>
+                        <input type="text" id="atestadoMedico">
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="adicionarAtestado()">Registrar Atestado</button>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Período</th>
+                                <th>Dias</th>
+                                <th>CID</th>
+                                <th>Médico</th>
+                                <th>Dias Restantes (30)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaAtestados"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PENSÕES -->
+        <div id="pensoes" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">⚖️ Controle de Pensões</div>
+
+                <div class="cadastro-grid">
+                    <div class="form-group">
+                        <label>Colaborador:</label>
+                        <select id="pensaoJudicialColaborador">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo:</label>
+                        <select id="pensaoTipo">
+                            <option>Alimentícia</option>
+                            <option>Graciosa</option>
+                            <option>Judicial</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Percentual:</label>
+                        <input type="number" id="pensaoPercentual" step="0.01" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Fixo (R$):</label>
+                        <input type="number" id="pensaoValorFixo" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Beneficiário:</label>
+                        <input type="text" id="pensaoBeneficiario">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF Beneficiário:</label>
+                        <input type="text" id="pensaoCPF">
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="adicionarPensaoJudicial()">Registrar Pensão</button>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Tipo</th>
+                                <th>Percentual</th>
+                                <th>Valor</th>
+                                <th>Beneficiário</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaPensoes"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMPRÉSTIMOS -->
+        <div id="emprestimos" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">💵 Controle de Empréstimos</div>
+
+                <div class="cadastro-grid">
+                    <div class="form-group">
+                        <label>Colaborador:</label>
+                        <select id="emprestimoConsignadoColaborador">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Banco:</label>
+                        <input type="text" id="emprestimoBanco">
+                    </div>
+                    <div class="form-group">
+                        <label>Contrato:</label>
+                        <input type="text" id="emprestimoContrato">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total:</label>
+                        <input type="number" id="emprestimoValorTotal" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Parcela:</label>
+                        <input type="number" id="emprestimoValorParcela" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Parcelas:</label>
+                        <input type="number" id="emprestimoTotalParcelas" min="1" value="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Parcelas Pagas:</label>
+                        <input type="number" id="emprestimoParcelasPagas" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select id="emprestimoStatus">
+                            <option>Ativo</option>
+                            <option>Quitado</option>
+                            <option>Suspenso</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="adicionarEmprestimoConsignado()">Registrar Empréstimo</button>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Banco</th>
+                                <th>Contrato</th>
+                                <th>Valor Parcela</th>
+                                <th>Parcelas</th>
+                                <th>Progresso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaEmprestimos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- COPARTICIPAÇÃO -->
+        <div id="coparticipacao" class="tab-content">
+            <div class="cadastro-section">
+                <div class="cadastro-title">🔄 Coparticipação Plano de Saúde</div>
+
+                <div class="cadastro-grid">
+                    <div class="form-group">
+                        <label>Colaborador:</label>
+                        <select id="copartColaborador">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor da Competência:</label>
+                        <input type="number" id="copartValor" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Parcelamento:</label>
+                        <input type="number" id="copartParcelamento" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Total (R$):</label>
+                        <input type="number" id="copartTotal" step="0.01" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Excedeu R$100?:</label>
+                        <select id="copartExcedeu">
+                            <option value="nao">Não</option>
+                            <option value="sim">Sim</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Observações:</label>
+                        <textarea id="copartObs" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="adicionarCoparticipacao()">Registrar Coparticipação</button>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Competência</th>
+                                <th>Valor Atual</th>
+                                <th>Parcelamento</th>
+                                <th>Total</th>
+                                <th>Excedeu</th>
+                                <th>Obs</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaCoparticipacao"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Colaborador -->
+    <div id="modalColaborador" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Novo Colaborador</h3>
+                <button class="close-btn" onclick="fecharModalColaborador()">&times;</button>
+            </div>
+            
+            <div class="cadastro-grid">
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" id="modalColabNome">
+                </div>
+                
+                <div class="form-group">
+                    <label>CPF:</label>
+                    <input type="text" id="modalColabCPF" placeholder="000.000.000-00">
+                </div>
+                
+                <div class="form-group">
+                    <label>RG:</label>
+                    <input type="text" id="modalColabRG">
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Nascimento:</label>
+                    <input type="date" id="modalColabNasc">
+                </div>
+                
+                <div class="form-group">
+                    <label>Departamento:</label>
+                    <select id="modalColabDepartamento">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Empresa:</label>
+                    <select id="modalColabEmpresa">
+                        <option>Empresa A</option>
+                        <option>Empresa B</option>
+                        <option>Empresa C</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Cargo:</label>
+                    <input type="text" id="modalColabCargo">
+                </div>
+                
+                <div class="form-group">
+                    <label>Salário Base:</label>
+                    <input type="number" id="modalColabSalario" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Admissão:</label>
+                    <input type="date" id="modalColabAdmissao">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo:</label>
+                    <select id="modalColabTipo">
+                        <option>CLT</option>
+                        <option>PJ</option>
+                        <option>Estágio</option>
+                        <option>Aprendiz</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="modalColabStatus">
+                        <option>Ativo</option>
+                        <option>Inativo</option>
+                        <option>Férias</option>
+                        <option>Afastado</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Banco:</label>
+                    <input type="text" id="modalColabBanco">
+                </div>
+                
+                <div class="form-group">
+                    <label>Agência:</label>
+                    <input type="text" id="modalColabAgencia">
+                </div>
+                
+                <div class="form-group">
+                    <label>Conta:</label>
+                    <input type="text" id="modalColabConta">
+                </div>
+                
+                <div class="form-group">
+                    <label>PIX:</label>
+                    <input type="text" id="modalColabPix">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="modalColabEmail">
+                </div>
+                
+                <div class="form-group">
+                    <label>Telefone:</label>
+                    <input type="text" id="modalColabTelefone">
+                </div>
+                
+                <div class="form-group">
+                    <label>Endereço:</label>
+                    <textarea id="modalColabEndereco" rows="2"></textarea>
+                </div>
+            </div>
+            
+            <button class="btn btn-success" onclick="salvarColaborador()" style="width: 100%; margin-top: 20px;">
+                💾 Salvar Colaborador
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Departamento -->
+    <div id="modalDepartamento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Novo Departamento</h3>
+                <button class="close-btn" onclick="fecharModalDepartamento()">&times;</button>
+            </div>
+            
+            <div class="cadastro-grid">
+                <div class="form-group">
+                    <label>Nome do Departamento:</label>
+                    <input type="text" id="modalDepNome">
+                </div>
+                
+                <div class="form-group">
+                    <label>Centro de Custo:</label>
+                    <input type="text" id="modalDepCentroCusto">
+                </div>
+                
+                <div class="form-group">
+                    <label>Gestor:</label>
+                    <input type="text" id="modalDepGestor">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email do Gestor:</label>
+                    <input type="email" id="modalDepEmail">
+                </div>
+                
+                <div class="form-group">
+                    <label>Localização:</label>
+                    <input type="text" id="modalDepLocal">
+                </div>
+                
+                <div class="form-group">
+                    <label>Orçamento Mensal:</label>
+                    <input type="number" id="modalDepOrcamento" step="0.01">
+                </div>
+                
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="modalDepStatus">
+                        <option>Ativo</option>
+                        <option>Inativo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="btn btn-success" onclick="salvarDepartamento()" style="width: 100%; margin-top: 20px;">
+                💾 Salvar Departamento
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dados iniciais
+        let colaboradores = [];
+        let departamentos = [];
+        let apontamentos = [];
+        let atestados = [];
+        let pensoes = [];
+        let emprestimos = [];
+        let coparticipacoes = [];
+
+        const checklists = {
+            apontamento: [
+                'Verificado com colaborador',
+                'Aprovado pelo gestor',
+                'Documento comprobatório',
+                'Valor correto',
+                'Parcelamento autorizado',
+                'Lançado no sistema'
+            ],
+            vt: [
+                'Solicitação assinada',
+                'Declaração de endereço',
+                'Quantidade de passes',
+                'Desconto autorizado',
+                'Entrega dos vales'
+            ],
+            saude: [
+                'Ficha de inscrição',
+                'Declaração de saúde',
+                'Dependentes cadastrados',
+                'Coparticipação autorizada',
+                'Vigência do plano'
+            ],
+            odonto: [
+                'Ficha de inscrição',
+                'Dependentes cadastrados',
+                'Plano escolhido',
+                'Autorização de desconto'
+            ],
+            home: [
+                'Solicitação de home office',
+                'Equipamentos fornecidos',
+                'Termo de responsabilidade',
+                'Auxílio autorizado'
+            ],
+            emprestimos: [
+                'Contrato assinado',
+                'Margem consignável',
+                'Parcelas autorizadas',
+                'Taxa de juros acordada',
+                'Banco confirmado'
+            ],
+            pensao: [
+                'Decisão judicial',
+                'Percentual definido',
+                'Beneficiário cadastrado',
+                'Conta do beneficiário',
+                'Retenção autorizada'
+            ],
+            decimo: [
+                'Meses trabalhados',
+                'Médias calculadas',
+                '1ª parcela paga',
+                '2ª parcela paga',
+                'Encargos provisionados'
+            ],
+            ferias: [
+                'Período aquisitivo',
+                'Período concessivo',
+                'Aviso de férias',
+                'Recibo de férias',
+                'Abono solicitado',
+                '1/3 constitucional'
+            ],
+            guias: [
+                'GPS (INSS)',
+                'FGTS',
+                'IRRF',
+                'PIS',
+                'RAIS',
+                'CAGED',
+                'DIRF',
+                'ESOCIAL'
+            ]
+        };
+
+        function inicializarDados() {
+            if (colaboradores.length === 0) {
+                colaboradores = [
+                    { id: 1, nome: 'João Silva', cpf: '123.456.789-00', departamento: 'TI', empresa: 'Empresa A', cargo: 'Analista de Sistemas', salario: 5000.00, admissao: '2023-01-15', status: 'Ativo' },
+                    { id: 2, nome: 'Maria Santos', cpf: '987.654.321-00', departamento: 'RH', empresa: 'Empresa A', cargo: 'Analista de RH', salario: 4500.00, admissao: '2023-03-10', status: 'Ativo' },
+                    { id: 3, nome: 'Pedro Oliveira', cpf: '456.789.123-00', departamento: 'Vendas', empresa: 'Empresa B', cargo: 'Vendedor', salario: 3000.00, admissao: '2024-01-05', status: 'Ativo' }
+                ];
+            }
+            
+            if (departamentos.length === 0) {
+                departamentos = [
+                    { id: 1, nome: 'TI', centroCusto: '1001', gestor: 'Carlos Souza', orcamento: 50000, status: 'Ativo' },
+                    { id: 2, nome: 'RH', centroCusto: '1002', gestor: 'Ana Lima', orcamento: 35000, status: 'Ativo' },
+                    { id: 3, nome: 'Vendas', centroCusto: '1003', gestor: 'Roberto Alves', orcamento: 40000, status: 'Ativo' }
+                ];
+            }
+            
+            if (apontamentos.length === 0) {
+                apontamentos = [
+                    { id: 1, colaborador: 'João Silva', tipo: 'Horas Extras 50%', valor: 350.00, quantidade: 10, parcelas: '1/1', competencia: '2025-02', obs: '', checklist: {} }
+                ];
+            }
+            
+            if (atestados.length === 0) {
+                atestados = [
+                    { id: 1, colaborador: 'Pedro Oliveira', dataInicio: '2025-02-10', dataFim: '2025-02-12', dias: 3, cid: 'J00', medico: 'Dr. Carlos' }
+                ];
+            }
+            
+            if (pensoes.length === 0) {
+                pensoes = [
+                    { id: 1, colaborador: 'Maria Santos', tipo: 'Alimentícia', percentual: 30, valor: 1350.00, beneficiario: 'João Santos' }
+                ];
+            }
+            
+            if (emprestimos.length === 0) {
+                emprestimos = [
+                    { id: 1, colaborador: 'João Silva', banco: 'Banco do Brasil', contrato: '12345', valorParcela: 450.00, totalParcelas: 24, parcelasPagas: 6, status: 'Ativo' }
+                ];
+            }
+            
+            if (coparticipacoes.length === 0) {
+                coparticipacoes = [
+                    { id: 1, colaborador: 'João Silva', competencia: '2025-02', valor: 150.00, parcelamento: 0, total: 150.00, excedeu: 'sim', obs: '' }
+                ];
+            }
+            
+            carregarDados();
+        }
+
+        function carregarDados() {
+            try {
+                const dados = localStorage.getItem('folhaCompleta');
+                if (dados) {
+                    const parsed = JSON.parse(dados);
+                    colaboradores = parsed.colaboradores || colaboradores;
+                    departamentos = parsed.departamentos || departamentos;
+                    apontamentos = parsed.apontamentos || apontamentos;
+                    atestados = parsed.atestados || atestados;
+                    pensoes = parsed.pensoes || pensoes;
+                    emprestimos = parsed.emprestimos || emprestimos;
+                    coparticipacoes = parsed.coparticipacoes || coparticipacoes;
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dados:', e);
+            }
+        }
+
+        function salvarDados() {
+            try {
+                localStorage.setItem('folhaCompleta', JSON.stringify({
+                    colaboradores: colaboradores,
+                    departamentos: departamentos,
+                    apontamentos: apontamentos,
+                    atestados: atestados,
+                    pensoes: pensoes,
+                    emprestimos: emprestimos,
+                    coparticipacoes: coparticipacoes
+                }));
+            } catch (e) {
+                console.error('Erro ao salvar dados:', e);
+            }
+        }
+
+        function preencherSelects() {
+            const selects = [
+                'filtroColaborador',
+                'apontamentoColaborador',
+                'vtColaborador',
+                'saudeColaborador',
+                'odontoColaborador',
+                'homeColaborador',
+                'emprestimoColaborador',
+                'pensaoColaborador',
+                'decimoColaborador',
+                'feriasColaborador',
+                'atestadoColaborador',
+                'pensaoJudicialColaborador',
+                'emprestimoConsignadoColaborador',
+                'copartColaborador'
+            ];
+            
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    colaboradores.forEach(colab => {
+                        if (colab.status === 'Ativo') {
+                            select.innerHTML += `<option value="${colab.nome}">${colab.nome}</option>`;
+                        }
+                    });
+                }
+            });
+            
+            const selectDepFiltro = document.getElementById('filtroDepartamento');
+            if (selectDepFiltro) {
+                selectDepFiltro.innerHTML = '<option value="">Todos</option>';
+                departamentos.forEach(dep => {
+                    selectDepFiltro.innerHTML += `<option value="${dep.nome}">${dep.nome}</option>`;
+                });
+            }
+            
+            const selectDepModal = document.getElementById('modalColabDepartamento');
+            if (selectDepModal) {
+                selectDepModal.innerHTML = '<option value="">Selecione...</option>';
+                departamentos.forEach(dep => {
+                    selectDepModal.innerHTML += `<option value="${dep.nome}">${dep.nome}</option>`;
+                });
+            }
+        }
+
+        function preencherTabelas() {
+            preencherTabelaColaboradores();
+            preencherTabelaDepartamentos();
+            preencherTabelaApontamentos();
+            preencherTabelaAtestados();
+            preencherTabelaPensoes();
+            preencherTabelaEmprestimos();
+            preencherTabelaCoparticipacao();
+            atualizarDashboard();
+        }
+
+        function preencherTabelaColaboradores() {
+            const tbody = document.getElementById('corpoTabelaColaboradores');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            colaboradores.forEach(colab => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${colab.nome}</td>
+                        <td>${colab.cpf || '-'}</td>
+                        <td>${colab.departamento || '-'}</td>
+                        <td>${colab.empresa || '-'}</td>
+                        <td>${colab.cargo || '-'}</td>
+                        <td>R$ ${(colab.salario || 0).toFixed(2)}</td>
+                        <td>${colab.admissao || '-'}</td>
+                        <td><span class="badge badge-${colab.status === 'Ativo' ? 'success' : colab.status === 'Inativo' ? 'danger' : 'warning'}">${colab.status || 'Ativo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarColaborador(${colab.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirColaborador(${colab.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaDepartamentos() {
+            const tbody = document.getElementById('corpoTabelaDepartamentos');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            departamentos.forEach(dep => {
+                const qtdColabs = colaboradores.filter(c => c.departamento === dep.nome).length;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${dep.nome}</td>
+                        <td>${dep.centroCusto || '-'}</td>
+                        <td>${dep.gestor || '-'}</td>
+                        <td>${qtdColabs}</td>
+                        <td>R$ ${(dep.orcamento || 0).toFixed(2)}</td>
+                        <td><span class="badge badge-${dep.status === 'Ativo' ? 'success' : 'danger'}">${dep.status || 'Ativo'}</span></td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarDepartamento(${dep.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirDepartamento(${dep.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaApontamentos() {
+            const tbody = document.getElementById('corpoTabelaApontamentos');
+            if (!tbody) return;
+            
+            const competencia = document.getElementById('competenciaGlobal')?.value || '2025-02';
+            const filtroColab = document.getElementById('filtroColaborador')?.value || '';
+            
+            let apontamentosFiltrados = apontamentos.filter(a => a.competencia === competencia);
+            
+            if (filtroColab) {
+                apontamentosFiltrados = apontamentosFiltrados.filter(a => a.colaborador === filtroColab);
+            }
+            
+            tbody.innerHTML = '';
+            apontamentosFiltrados.forEach(ap => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="checkbox" ${ap.checklist?.concluido ? 'checked' : ''} onchange="toggleCheckApontamento(${ap.id})"></td>
+                        <td>${ap.colaborador}</td>
+                        <td>${ap.tipo}</td>
+                        <td>R$ ${(ap.valor || 0).toFixed(2)}</td>
+                        <td>${ap.quantidade || 1}</td>
+                        <td>${ap.parcelas || '-'}</td>
+                        <td>${ap.competencia}</td>
+                        <td>${ap.obs || '-'}</td>
+                        <td>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarApontamento(${ap.id})">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirApontamento(${ap.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaAtestados() {
+            const tbody = document.getElementById('corpoTabelaAtestados');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            atestados.forEach(atest => {
+                const diasRestantes = 30 - atest.dias;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${atest.colaborador}</td>
+                        <td>${atest.dataInicio} a ${atest.dataFim}</td>
+                        <td>${atest.dias}</td>
+                        <td>${atest.cid || '-'}</td>
+                        <td>${atest.medico || '-'}</td>
+                        <td>${diasRestantes} dias</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirAtestado(${atest.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaPensoes() {
+            const tbody = document.getElementById('corpoTabelaPensoes');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            pensoes.forEach(pensao => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${pensao.colaborador}</td>
+                        <td>${pensao.tipo}</td>
+                        <td>${pensao.percentual ? pensao.percentual + '%' : '-'}</td>
+                        <td>R$ ${(pensao.valor || 0).toFixed(2)}</td>
+                        <td>${pensao.beneficiario || '-'}</td>
+                        <td><span class="badge badge-success">Ativo</span></td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirPensao(${pensao.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaEmprestimos() {
+            const tbody = document.getElementById('corpoTabelaEmprestimos');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            emprestimos.forEach(emp => {
+                const progresso = (emp.parcelasPagas / emp.totalParcelas * 100).toFixed(0);
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${emp.colaborador}</td>
+                        <td>${emp.banco || '-'}</td>
+                        <td>${emp.contrato || '-'}</td>
+                        <td>R$ ${(emp.valorParcela || 0).toFixed(2)}</td>
+                        <td>${emp.parcelasPagas}/${emp.totalParcelas}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <div style="background: #e2e8f0; height: 8px; width: 100px; border-radius: 4px;">
+                                    <div style="background: #48bb78; height: 8px; width: ${progresso}%; border-radius: 4px;"></div>
+                                </div>
+                                ${progresso}%
+                            </div>
+                        </td>
+                        <td><span class="badge badge-${emp.status === 'Ativo' ? 'success' : emp.status === 'Quitado' ? 'info' : 'warning'}">${emp.status}</span></td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirEmprestimo(${emp.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTabelaCoparticipacao() {
+            const tbody = document.getElementById('corpoTabelaCoparticipacao');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            coparticipacoes.forEach(cop => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${cop.colaborador}</td>
+                        <td>${cop.competencia}</td>
+                        <td>R$ ${(cop.valor || 0).toFixed(2)}</td>
+                        <td>R$ ${(cop.parcelamento || 0).toFixed(2)}</td>
+                        <td>R$ ${(cop.total || 0).toFixed(2)}</td>
+                        <td><span class="badge badge-${cop.excedeu === 'sim' ? 'warning' : 'success'}">${cop.excedeu === 'sim' ? 'Excedeu' : 'Normal'}</span></td>
+                        <td>${cop.obs || '-'}</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirCoparticipacao(${cop.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function preencherTodosChecklists() {
+            for (let key in checklists) {
+                const container = document.getElementById(`checklist${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                if (container) {
+                    container.innerHTML = '';
+                    checklists[key].forEach(item => {
+                        const id = `check_${key}_${item.replace(/\s+/g, '_')}`;
+                        container.innerHTML += `
+                            <div class="checklist-item">
+                                <input type="checkbox" id="${id}">
+                                <label for="${id}">${item}</label>
+                            </div>
+                        `;
+                    });
+                }
+            }
+            
+            preencherChecklistDashboard();
+        }
+
+        function preencherChecklistDashboard() {
+            const container = document.getElementById('dashboardChecklists');
+            if (!container) return;
+            
+            const categorias = [
+                { nome: 'Documentos', total: 9, concluidos: 7 },
+                { nome: 'Vale Transporte', total: 5, concluidos: 4 },
+                { nome: 'Plano de Saúde', total: 5, concluidos: 3 },
+                { nome: 'Empréstimos', total: 5, concluidos: 4 },
+                { nome: 'Guias', total: 8, concluidos: 5 },
+                { nome: 'Férias', total: 6, concluidos: 4 }
+            ];
+            
+            container.innerHTML = '';
+            categorias.forEach(cat => {
+                const percent = (cat.concluidos / cat.total) * 100;
+                container.innerHTML += `
+                    <div class="checklist-item" style="flex-direction: column; align-items: flex-start;">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <strong>${cat.nome}</strong>
+                            <span>${cat.concluidos}/${cat.total}</span>
+                        </div>
+                        <div class="checklist-progress" style="width: 100%;">
+                            <div class="checklist-progress-bar" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function atualizarDashboard() {
+            const ativos = colaboradores.filter(c => c.status === 'Ativo').length;
+            const inativos = colaboradores.filter(c => c.status === 'Inativo').length;
+            const totalSalarios = colaboradores.reduce((acc, c) => acc + (c.salario || 0), 0);
+            const valorApontamentos = apontamentos.reduce((acc, a) => acc + (a.valor || 0), 0);
+            
+            document.getElementById('totalColaboradores').textContent = colaboradores.length;
+            document.getElementById('totalDepartamentos').textContent = departamentos.length;
+            document.getElementById('totalApontamentos').textContent = apontamentos.length;
+            document.getElementById('valorTotalFolha').textContent = `R$ ${(totalSalarios + valorApontamentos).toFixed(2)}`;
+            
+            document.getElementById('resumoAtivos').textContent = ativos;
+            document.getElementById('resumoInativos').textContent = inativos;
+            document.getElementById('resumoPendentes').textContent = apontamentos.filter(a => !a.checklist?.concluido).length;
+            document.getElementById('resumoConcluidos').textContent = apontamentos.filter(a => a.checklist?.concluido).length;
+            
+            document.getElementById('resumoValorAtivos').textContent = `R$ ${totalSalarios.toFixed(2)}`;
+            document.getElementById('resumoValorPendentes').textContent = `R$ ${apontamentos.filter(a => !a.checklist?.concluido).reduce((acc, a) => acc + (a.valor || 0), 0).toFixed(2)}`;
+            document.getElementById('resumoValorConcluidos').textContent = `R$ ${apontamentos.filter(a => a.checklist?.concluido).reduce((acc, a) => acc + (a.valor || 0), 0).toFixed(2)}`;
+        }
+
+        function abrirAba(event, abaId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(abaId).classList.add('active');
+        }
+
+        function aplicarFiltros() {
+            preencherTabelaApontamentos();
+        }
+
+        function exportarDados() {
+            const dados = {
+                colaboradores: colaboradores,
+                departamentos: departamentos,
+                apontamentos: apontamentos,
+                atestados: atestados,
+                pensoes: pensoes,
+                emprestimos: emprestimos,
+                coparticipacoes: coparticipacoes,
+                dataExportacao: new Date().toISOString(),
+                competencia: document.getElementById('competenciaGlobal')?.value
+            };
+            
+            const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `folha_completa_${dados.competencia}.json`;
+            a.click();
+            
+            alert('Dados exportados com sucesso!');
+        }
+
+        function mostrarModalColaborador() {
+            document.getElementById('modalColaborador').classList.add('active');
+        }
+
+        function fecharModalColaborador() {
+            document.getElementById('modalColaborador').classList.remove('active');
+        }
+
+        function salvarColaborador() {
+            const novoColaborador = {
+                id: colaboradores.length + 1,
+                nome: document.getElementById('modalColabNome')?.value || 'Novo Colaborador',
+                cpf: document.getElementById('modalColabCPF')?.value || '',
+                rg: document.getElementById('modalColabRG')?.value || '',
+                nascimento: document.getElementById('modalColabNasc')?.value || '',
+                departamento: document.getElementById('modalColabDepartamento')?.value || '',
+                empresa: document.getElementById('modalColabEmpresa')?.value || '',
+                cargo: document.getElementById('modalColabCargo')?.value || '',
+                salario: parseFloat(document.getElementById('modalColabSalario')?.value) || 0,
+                admissao: document.getElementById('modalColabAdmissao')?.value || '',
+                tipo: document.getElementById('modalColabTipo')?.value || 'CLT',
+                status: document.getElementById('modalColabStatus')?.value || 'Ativo',
+                banco: document.getElementById('modalColabBanco')?.value || '',
+                agencia: document.getElementById('modalColabAgencia')?.value || '',
+                conta: document.getElementById('modalColabConta')?.value || '',
+                pix: document.getElementById('modalColabPix')?.value || '',
+                email: document.getElementById('modalColabEmail')?.value || '',
+                telefone: document.getElementById('modalColabTelefone')?.value || '',
+                endereco: document.getElementById('modalColabEndereco')?.value || ''
+            };
+            
+            colaboradores.push(novoColaborador);
+            preencherTabelas();
+            preencherSelects();
+            salvarDados();
+            fecharModalColaborador();
+            alert('Colaborador cadastrado com sucesso!');
+        }
+
+        function excluirColaborador(id) {
+            if (confirm('Tem certeza que deseja excluir este colaborador?')) {
+                colaboradores = colaboradores.filter(c => c.id !== id);
+                preencherTabelas();
+                preencherSelects();
+                salvarDados();
+            }
+        }
+
+        function editarColaborador(id) {
+            alert('Função de edição em desenvolvimento');
+        }
+
+        function mostrarModalDepartamento() {
+            document.getElementById('modalDepartamento').classList.add('active');
+        }
+
+        function fecharModalDepartamento() {
+            document.getElementById('modalDepartamento').classList.remove('active');
+        }
+
+        function salvarDepartamento() {
+            const novoDepartamento = {
+                id: departamentos.length + 1,
+                nome: document.getElementById('modalDepNome')?.value || 'Novo Departamento',
+                centroCusto: document.getElementById('modalDepCentroCusto')?.value || '',
+                gestor: document.getElementById('modalDepGestor')?.value || '',
+                email: document.getElementById('modalDepEmail')?.value || '',
+                localizacao: document.getElementById('modalDepLocal')?.value || '',
+                orcamento: parseFloat(document.getElementById('modalDepOrcamento')?.value) || 0,
+                status: document.getElementById('modalDepStatus')?.value || 'Ativo'
+            };
+            
+            departamentos.push(novoDepartamento);
+            preencherTabelas();
+            preencherSelects();
+            salvarDados();
+            fecharModalDepartamento();
+            alert('Departamento cadastrado com sucesso!');
+        }
+
+        function excluirDepartamento(id) {
+            if (confirm('Tem certeza que deseja excluir este departamento?')) {
+                departamentos = departamentos.filter(d => d.id !== id);
+                preencherTabelas();
+                preencherSelects();
+                salvarDados();
+            }
+        }
+
+        function editarDepartamento(id) {
+            alert('Função de edição em desenvolvimento');
+        }
+
+        function adicionarApontamento() {
+            const colaborador = document.getElementById('apontamentoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const novoApontamento = {
+                id: apontamentos.length + 1,
+                colaborador: colaborador,
+                tipo: document.getElementById('apontamentoTipo')?.value || 'Outros',
+                valor: parseFloat(document.getElementById('apontamentoValor')?.value) || 0,
+                quantidade: parseInt(document.getElementById('apontamentoQuantidade')?.value) || 1,
+                parcelas: document.getElementById('apontamentoParcelas')?.value || '1/1',
+                competencia: document.getElementById('competenciaGlobal')?.value || '2025-02',
+                obs: document.getElementById('apontamentoObs')?.value || '',
+                checklist: {}
+            };
+            
+            apontamentos.push(novoApontamento);
+            preencherTabelaApontamentos();
+            salvarDados();
+            atualizarDashboard();
+            
+            document.getElementById('apontamentoValor').value = '';
+            document.getElementById('apontamentoObs').value = '';
+            
+            alert('Apontamento adicionado com sucesso!');
+        }
+
+        function excluirApontamento(id) {
+            if (confirm('Tem certeza que deseja excluir este apontamento?')) {
+                apontamentos = apontamentos.filter(a => a.id !== id);
+                preencherTabelaApontamentos();
+                salvarDados();
+                atualizarDashboard();
+            }
+        }
+
+        function editarApontamento(id) {
+            alert('Função de edição em desenvolvimento');
+        }
+
+        function toggleCheckApontamento(id) {
+            const apontamento = apontamentos.find(a => a.id === id);
+            if (apontamento) {
+                apontamento.checklist = apontamento.checklist || {};
+                apontamento.checklist.concluido = !apontamento.checklist.concluido;
+                salvarDados();
+                atualizarDashboard();
+            }
+        }
+
+        function adicionarVT() {
+            const colaborador = document.getElementById('vtColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const salario = parseFloat(document.getElementById('vtSalario')?.value) || 0;
+            const descontoAuto = salario * 0.06;
+            const descontoManual = parseFloat(document.getElementById('vtDescontoManual')?.value) || 0;
+            
+            alert(`VT adicionado para ${colaborador}\nDesconto: R$ ${(descontoManual || descontoAuto).toFixed(2)}`);
+        }
+
+        function adicionarSaude() {
+            const colaborador = document.getElementById('saudeColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const titular = parseFloat(document.getElementById('saudeTitular')?.value) || 0;
+            const qtdDep = parseInt(document.getElementById('saudeQtdDep')?.value) || 0;
+            const valorDep = parseFloat(document.getElementById('saudeValorDep')?.value) || 0;
+            const total = titular + (qtdDep * valorDep);
+            
+            document.getElementById('saudeTotal').value = total.toFixed(2);
+            
+            alert(`Plano de saúde adicionado para ${colaborador}\nValor total: R$ ${total.toFixed(2)}`);
+        }
+
+        function adicionarOdonto() {
+            const colaborador = document.getElementById('odontoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            alert('Plano odontológico adicionado com sucesso!');
+        }
+
+        function adicionarHomeOffice() {
+            const colaborador = document.getElementById('homeColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            alert('Auxílio home office adicionado com sucesso!');
+        }
+
+        function adicionarEmprestimo() {
+            const colaborador = document.getElementById('emprestimoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            alert('Empréstimo adicionado com sucesso!');
+        }
+
+        function adicionarPensao() {
+            const colaborador = document.getElementById('pensaoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            alert('Pensão adicionada com sucesso!');
+        }
+
+        function calcularDecimo() {
+            const colaborador = document.getElementById('decimoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const colab = colaboradores.find(c => c.nome === colaborador);
+            if (colab) {
+                const meses = parseInt(document.getElementById('decimoMeses')?.value) || 12;
+                const valor = (colab.salario / 12) * meses;
+                document.getElementById('decimoValor').value = valor.toFixed(2);
+                alert(`13º calculado: R$ ${valor.toFixed(2)}`);
+            }
+        }
+
+        function calcularFerias() {
+            const colaborador = document.getElementById('feriasColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            alert('Férias calculadas com sucesso!');
+        }
+
+        function adicionarAtestado() {
+            const colaborador = document.getElementById('atestadoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const dataInicio = document.getElementById('atestadoDataInicio')?.value;
+            const dataFim = document.getElementById('atestadoDataFim')?.value;
+            
+            if (!dataInicio || !dataFim) {
+                alert('Preencha as datas de início e fim!');
+                return;
+            }
+            
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            const diffTime = Math.abs(fim - inicio);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            document.getElementById('atestadoDias').value = diffDays;
+            
+            const novoAtestado = {
+                id: atestados.length + 1,
+                colaborador: colaborador,
+                dataInicio: dataInicio,
+                dataFim: dataFim,
+                dias: diffDays,
+                cid: document.getElementById('atestadoCID')?.value || '',
+                medico: document.getElementById('atestadoMedico')?.value || ''
+            };
+            
+            atestados.push(novoAtestado);
+            preencherTabelaAtestados();
+            salvarDados();
+            
+            document.getElementById('atestadoDataInicio').value = '';
+            document.getElementById('atestadoDataFim').value = '';
+            document.getElementById('atestadoCID').value = '';
+            document.getElementById('atestadoMedico').value = '';
+            
+            alert('Atestado registrado com sucesso!');
+        }
+
+        function excluirAtestado(id) {
+            if (confirm('Tem certeza que deseja excluir este atestado?')) {
+                atestados = atestados.filter(a => a.id !== id);
+                preencherTabelaAtestados();
+                salvarDados();
+            }
+        }
+
+        function adicionarPensaoJudicial() {
+            const colaborador = document.getElementById('pensaoJudicialColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const tipo = document.getElementById('pensaoTipo')?.value;
+            const percentual = parseFloat(document.getElementById('pensaoPercentual')?.value) || 0;
+            const valorFixo = parseFloat(document.getElementById('pensaoValorFixo')?.value) || 0;
+            
+            const colab = colaboradores.find(c => c.nome === colaborador);
+            let valor = valorFixo;
+            if (percentual > 0 && colab) {
+                valor = (colab.salario * percentual) / 100;
+            }
+            
+            const novaPensao = {
+                id: pensoes.length + 1,
+                colaborador: colaborador,
+                tipo: tipo,
+                percentual: percentual,
+                valor: valor,
+                beneficiario: document.getElementById('pensaoBeneficiario')?.value || '',
+                cpfBeneficiario: document.getElementById('pensaoCPF')?.value || ''
+            };
+            
+            pensoes.push(novaPensao);
+            preencherTabelaPensoes();
+            salvarDados();
+            
+            document.getElementById('pensaoPercentual').value = '';
+            document.getElementById('pensaoValorFixo').value = '';
+            document.getElementById('pensaoBeneficiario').value = '';
+            document.getElementById('pensaoCPF').value = '';
+            
+            alert('Pensão registrada com sucesso!');
+        }
+
+        function excluirPensao(id) {
+            if (confirm('Tem certeza que deseja excluir esta pensão?')) {
+                pensoes = pensoes.filter(p => p.id !== id);
+                preencherTabelaPensoes();
+                salvarDados();
+            }
+        }
+
+        function adicionarEmprestimoConsignado() {
+            const colaborador = document.getElementById('emprestimoConsignadoColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const novoEmprestimo = {
+                id: emprestimos.length + 1,
+                colaborador: colaborador,
+                banco: document.getElementById('emprestimoBanco')?.value || '',
+                contrato: document.getElementById('emprestimoContrato')?.value || '',
+                valorTotal: parseFloat(document.getElementById('emprestimoValorTotal')?.value) || 0,
+                valorParcela: parseFloat(document.getElementById('emprestimoValorParcela')?.value) || 0,
+                totalParcelas: parseInt(document.getElementById('emprestimoTotalParcelas')?.value) || 12,
+                parcelasPagas: parseInt(document.getElementById('emprestimoParcelasPagas')?.value) || 0,
+                status: document.getElementById('emprestimoStatus')?.value || 'Ativo'
+            };
+            
+            emprestimos.push(novoEmprestimo);
+            preencherTabelaEmprestimos();
+            salvarDados();
+            
+            document.getElementById('emprestimoBanco').value = '';
+            document.getElementById('emprestimoContrato').value = '';
+            document.getElementById('emprestimoValorTotal').value = '';
+            document.getElementById('emprestimoValorParcela').value = '';
+            document.getElementById('emprestimoParcelasPagas').value = '0';
+            
+            alert('Empréstimo registrado com sucesso!');
+        }
+
+        function excluirEmprestimo(id) {
+            if (confirm('Tem certeza que deseja excluir este empréstimo?')) {
+                emprestimos = emprestimos.filter(e => e.id !== id);
+                preencherTabelaEmprestimos();
+                salvarDados();
+            }
+        }
+
+        function adicionarCoparticipacao() {
+            const colaborador = document.getElementById('copartColaborador')?.value;
+            if (!colaborador) {
+                alert('Selecione um colaborador!');
+                return;
+            }
+            
+            const valor = parseFloat(document.getElementById('copartValor')?.value) || 0;
+            const parcelamento = parseFloat(document.getElementById('copartParcelamento')?.value) || 0;
+            const total = valor + parcelamento;
+            
+            document.getElementById('copartTotal').value = total.toFixed(2);
+            
+            const novaCoparticipacao = {
+                id: coparticipacoes.length + 1,
+                colaborador: colaborador,
+                competencia: document.getElementById('competenciaGlobal')?.value || '2025-02',
+                valor: valor,
+                parcelamento: parcelamento,
+                total: total,
+                excedeu: document.getElementById('copartExcedeu')?.value || 'nao',
+                obs: document.getElementById('copartObs')?.value || ''
+            };
+            
+            coparticipacoes.push(novaCoparticipacao);
+            preencherTabelaCoparticipacao();
+            salvarDados();
+            
+            document.getElementById('copartValor').value = '';
+            document.getElementById('copartParcelamento').value = '';
+            document.getElementById('copartObs').value = '';
+            
+            alert('Coparticipação registrada com sucesso!');
+        }
+
+        function excluirCoparticipacao(id) {
+            if (confirm('Tem certeza que deseja excluir esta coparticipação?')) {
+                coparticipacoes = coparticipacoes.filter(c => c.id !== id);
+                preencherTabelaCoparticipacao();
+                salvarDados();
+            }
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'vtColaborador') {
+                const nomeColab = e.target.value;
+                const colaborador = colaboradores.find(c => c.nome === nomeColab);
+                if (colaborador) {
+                    document.getElementById('vtSalario').value = colaborador.salario || 0;
+                    document.getElementById('vtDescontoAuto').value = ((colaborador.salario || 0) * 0.06).toFixed(2);
+                }
+            }
+            
+            if (e.target.id === 'saudeColaborador') {
+                const nomeColab = e.target.value;
+                const colaborador = colaboradores.find(c => c.nome === nomeColab);
+                if (colaborador) {
+                    document.getElementById('saudeTitular').value = colaborador.salario ? colaborador.salario * 0.1 : 0;
+                }
+            }
+            
+            if (e.target.id === 'decimoColaborador') {
+                const nomeColab = e.target.value;
+                const colaborador = colaboradores.find(c => c.nome === nomeColab);
+                if (colaborador) {
+                    const meses = parseInt(document.getElementById('decimoMeses')?.value) || 12;
+                    const valor = (colaborador.salario / 12) * meses;
+                    document.getElementById('decimoValor').value = valor.toFixed(2);
+                }
+            }
+            
+            if (e.target.id === 'copartValor' || e.target.id === 'copartParcelamento') {
+                const valor = parseFloat(document.getElementById('copartValor')?.value) || 0;
+                const parcelamento = parseFloat(document.getElementById('copartParcelamento')?.value) || 0;
+                document.getElementById('copartTotal').value = (valor + parcelamento).toFixed(2);
+                
+                const excedeu = (valor + parcelamento) > 100 ? 'sim' : 'nao';
+                document.getElementById('copartExcedeu').value = excedeu;
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'atestadoDataInicio' || e.target.id === 'atestadoDataFim') {
+                const dataInicio = document.getElementById('atestadoDataInicio')?.value;
+                const dataFim = document.getElementById('atestadoDataFim')?.value;
+                
+                if (dataInicio && dataFim) {
+                    const inicio = new Date(dataInicio);
+                    const fim = new Date(dataFim);
+                    const diffTime = Math.abs(fim - inicio);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    document.getElementById('atestadoDias').value = diffDays;
+                }
+            }
+        });
+
+        window.onload = function() {
+            inicializarDados();
+            preencherSelects();
+            preencherTabelas();
+            preencherTodosChecklists();
+        };
+    </script>
+</body>
+</html>
