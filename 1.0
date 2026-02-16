@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Folha de Pagamento - Versão Completa</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -1414,6 +1417,38 @@
     </div>
 
     <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Regras do Firestore (comentadas para referência)
+        /*
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            // Permitir leitura/escrita apenas para usuários autenticados (vamos configurar depois)
+            match /{document=**} {
+              allow read, write: if false;
+            }
+            
+            // Por enquanto, para teste, use isso (menos seguro):
+            // match /{document=**} {
+            //   allow read, write: if true;
+            // }
+          }
+        }
+        */
+
         // Dados iniciais
         let colaboradores = [];
         let departamentos = [];
@@ -1499,57 +1534,130 @@
             ]
         };
 
-        function inicializarDados() {
-            if (colaboradores.length === 0) {
-                colaboradores = [
-                    { id: 1, nome: 'João Silva', cpf: '123.456.789-00', departamento: 'TI', empresa: 'Empresa A', cargo: 'Analista de Sistemas', salario: 5000.00, admissao: '2023-01-15', status: 'Ativo' },
-                    { id: 2, nome: 'Maria Santos', cpf: '987.654.321-00', departamento: 'RH', empresa: 'Empresa A', cargo: 'Analista de RH', salario: 4500.00, admissao: '2023-03-10', status: 'Ativo' },
-                    { id: 3, nome: 'Pedro Oliveira', cpf: '456.789.123-00', departamento: 'Vendas', empresa: 'Empresa B', cargo: 'Vendedor', salario: 3000.00, admissao: '2024-01-05', status: 'Ativo' }
-                ];
+        async function carregarDadosFirebase() {
+            try {
+                // Carregar colaboradores
+                const colabSnapshot = await db.collection('colaboradores').get();
+                colaboradores = colabSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar departamentos
+                const depSnapshot = await db.collection('departamentos').get();
+                departamentos = depSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar apontamentos
+                const apontSnapshot = await db.collection('apontamentos').get();
+                apontamentos = apontSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar atestados
+                const atestSnapshot = await db.collection('atestados').get();
+                atestados = atestSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar pensões
+                const pensaoSnapshot = await db.collection('pensoes').get();
+                pensoes = pensaoSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar empréstimos
+                const empSnapshot = await db.collection('emprestimos').get();
+                emprestimos = empSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Carregar coparticipações
+                const copartSnapshot = await db.collection('coparticipacoes').get();
+                coparticipacoes = copartSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Se não houver dados, inicializar com dados padrão
+                if (colaboradores.length === 0) {
+                    await inicializarDadosPadrao();
+                } else {
+                    carregarDados();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do Firebase:', error);
+                // Fallback para localStorage
+                carregarDadosLocal();
             }
+        }
+
+        async function inicializarDadosPadrao() {
+            colaboradores = [
+                { nome: 'João Silva', cpf: '123.456.789-00', departamento: 'TI', empresa: 'Empresa A', cargo: 'Analista de Sistemas', salario: 5000.00, admissao: '2023-01-15', status: 'Ativo' },
+                { nome: 'Maria Santos', cpf: '987.654.321-00', departamento: 'RH', empresa: 'Empresa A', cargo: 'Analista de RH', salario: 4500.00, admissao: '2023-03-10', status: 'Ativo' },
+                { nome: 'Pedro Oliveira', cpf: '456.789.123-00', departamento: 'Vendas', empresa: 'Empresa B', cargo: 'Vendedor', salario: 3000.00, admissao: '2024-01-05', status: 'Ativo' }
+            ];
             
-            if (departamentos.length === 0) {
-                departamentos = [
-                    { id: 1, nome: 'TI', centroCusto: '1001', gestor: 'Carlos Souza', orcamento: 50000, status: 'Ativo' },
-                    { id: 2, nome: 'RH', centroCusto: '1002', gestor: 'Ana Lima', orcamento: 35000, status: 'Ativo' },
-                    { id: 3, nome: 'Vendas', centroCusto: '1003', gestor: 'Roberto Alves', orcamento: 40000, status: 'Ativo' }
-                ];
-            }
+            departamentos = [
+                { nome: 'TI', centroCusto: '1001', gestor: 'Carlos Souza', orcamento: 50000, status: 'Ativo' },
+                { nome: 'RH', centroCusto: '1002', gestor: 'Ana Lima', orcamento: 35000, status: 'Ativo' },
+                { nome: 'Vendas', centroCusto: '1003', gestor: 'Roberto Alves', orcamento: 40000, status: 'Ativo' }
+            ];
             
-            if (apontamentos.length === 0) {
-                apontamentos = [
-                    { id: 1, colaborador: 'João Silva', tipo: 'Horas Extras 50%', valor: 350.00, quantidade: 10, parcelas: '1/1', competencia: '2025-02', obs: '', checklist: {} }
-                ];
-            }
+            apontamentos = [
+                { colaborador: 'João Silva', tipo: 'Horas Extras 50%', valor: 350.00, quantidade: 10, parcelas: '1/1', competencia: '2025-02', obs: '', checklist: {} }
+            ];
             
-            if (atestados.length === 0) {
-                atestados = [
-                    { id: 1, colaborador: 'Pedro Oliveira', dataInicio: '2025-02-10', dataFim: '2025-02-12', dias: 3, cid: 'J00', medico: 'Dr. Carlos' }
-                ];
-            }
+            atestados = [
+                { colaborador: 'Pedro Oliveira', dataInicio: '2025-02-10', dataFim: '2025-02-12', dias: 3, cid: 'J00', medico: 'Dr. Carlos' }
+            ];
             
-            if (pensoes.length === 0) {
-                pensoes = [
-                    { id: 1, colaborador: 'Maria Santos', tipo: 'Alimentícia', percentual: 30, valor: 1350.00, beneficiario: 'João Santos' }
-                ];
-            }
+            pensoes = [
+                { colaborador: 'Maria Santos', tipo: 'Alimentícia', percentual: 30, valor: 1350.00, beneficiario: 'João Santos' }
+            ];
             
-            if (emprestimos.length === 0) {
-                emprestimos = [
-                    { id: 1, colaborador: 'João Silva', banco: 'Banco do Brasil', contrato: '12345', valorParcela: 450.00, totalParcelas: 24, parcelasPagas: 6, status: 'Ativo' }
-                ];
-            }
+            emprestimos = [
+                { colaborador: 'João Silva', banco: 'Banco do Brasil', contrato: '12345', valorParcela: 450.00, totalParcelas: 24, parcelasPagas: 6, status: 'Ativo' }
+            ];
             
-            if (coparticipacoes.length === 0) {
-                coparticipacoes = [
-                    { id: 1, colaborador: 'João Silva', competencia: '2025-02', valor: 150.00, parcelamento: 0, total: 150.00, excedeu: 'sim', obs: '' }
-                ];
-            }
+            coparticipacoes = [
+                { colaborador: 'João Silva', competencia: '2025-02', valor: 150.00, parcelamento: 0, total: 150.00, excedeu: 'sim', obs: '' }
+            ];
             
+            await salvarTodosDadosFirebase();
             carregarDados();
         }
 
-        function carregarDados() {
+        async function salvarTodosDadosFirebase() {
+            try {
+                // Salvar colaboradores
+                for (const colab of colaboradores) {
+                    await db.collection('colaboradores').add(colab);
+                }
+                
+                // Salvar departamentos
+                for (const dep of departamentos) {
+                    await db.collection('departamentos').add(dep);
+                }
+                
+                // Salvar apontamentos
+                for (const ap of apontamentos) {
+                    await db.collection('apontamentos').add(ap);
+                }
+                
+                // Salvar atestados
+                for (const at of atestados) {
+                    await db.collection('atestados').add(at);
+                }
+                
+                // Salvar pensões
+                for (const p of pensoes) {
+                    await db.collection('pensoes').add(p);
+                }
+                
+                // Salvar empréstimos
+                for (const e of emprestimos) {
+                    await db.collection('emprestimos').add(e);
+                }
+                
+                // Salvar coparticipações
+                for (const c of coparticipacoes) {
+                    await db.collection('coparticipacoes').add(c);
+                }
+                
+                console.log('Dados salvos no Firebase com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar dados no Firebase:', error);
+            }
+        }
+
+        function carregarDadosLocal() {
             try {
                 const dados = localStorage.getItem('folhaCompleta');
                 if (dados) {
@@ -1567,8 +1675,18 @@
             }
         }
 
-        function salvarDados() {
+        function carregarDados() {
+            preencherSelects();
+            preencherTabelas();
+            preencherTodosChecklists();
+        }
+
+        async function salvarDados() {
             try {
+                // Salvar no Firebase
+                await salvarTodosDadosFirebase();
+                
+                // Backup no localStorage
                 localStorage.setItem('folhaCompleta', JSON.stringify({
                     colaboradores: colaboradores,
                     departamentos: departamentos,
@@ -1658,8 +1776,8 @@
                         <td>${colab.admissao || '-'}</td>
                         <td><span class="badge badge-${colab.status === 'Ativo' ? 'success' : colab.status === 'Inativo' ? 'danger' : 'warning'}">${colab.status || 'Ativo'}</span></td>
                         <td>
-                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarColaborador(${colab.id})">✏️</button>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirColaborador(${colab.id})">🗑️</button>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarColaborador('${colab.id}')">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirColaborador('${colab.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1682,8 +1800,8 @@
                         <td>R$ ${(dep.orcamento || 0).toFixed(2)}</td>
                         <td><span class="badge badge-${dep.status === 'Ativo' ? 'success' : 'danger'}">${dep.status || 'Ativo'}</span></td>
                         <td>
-                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarDepartamento(${dep.id})">✏️</button>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirDepartamento(${dep.id})">🗑️</button>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarDepartamento('${dep.id}')">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirDepartamento('${dep.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1707,7 +1825,7 @@
             apontamentosFiltrados.forEach(ap => {
                 tbody.innerHTML += `
                     <tr>
-                        <td><input type="checkbox" ${ap.checklist?.concluido ? 'checked' : ''} onchange="toggleCheckApontamento(${ap.id})"></td>
+                        <td><input type="checkbox" ${ap.checklist?.concluido ? 'checked' : ''} onchange="toggleCheckApontamento('${ap.id}')"></td>
                         <td>${ap.colaborador}</td>
                         <td>${ap.tipo}</td>
                         <td>R$ ${(ap.valor || 0).toFixed(2)}</td>
@@ -1716,8 +1834,8 @@
                         <td>${ap.competencia}</td>
                         <td>${ap.obs || '-'}</td>
                         <td>
-                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarApontamento(${ap.id})">✏️</button>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirApontamento(${ap.id})">🗑️</button>
+                            <button class="btn btn-primary" style="padding: 5px 10px;" onclick="editarApontamento('${ap.id}')">✏️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirApontamento('${ap.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1740,7 +1858,7 @@
                         <td>${atest.medico || '-'}</td>
                         <td>${diasRestantes} dias</td>
                         <td>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirAtestado(${atest.id})">🗑️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirAtestado('${atest.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1762,7 +1880,7 @@
                         <td>${pensao.beneficiario || '-'}</td>
                         <td><span class="badge badge-success">Ativo</span></td>
                         <td>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirPensao(${pensao.id})">🗑️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirPensao('${pensao.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1793,7 +1911,7 @@
                         </td>
                         <td><span class="badge badge-${emp.status === 'Ativo' ? 'success' : emp.status === 'Quitado' ? 'info' : 'warning'}">${emp.status}</span></td>
                         <td>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirEmprestimo(${emp.id})">🗑️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirEmprestimo('${emp.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1816,7 +1934,7 @@
                         <td><span class="badge badge-${cop.excedeu === 'sim' ? 'warning' : 'success'}">${cop.excedeu === 'sim' ? 'Excedeu' : 'Normal'}</span></td>
                         <td>${cop.obs || '-'}</td>
                         <td>
-                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirCoparticipacao(${cop.id})">🗑️</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px;" onclick="excluirCoparticipacao('${cop.id}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -1937,9 +2055,8 @@
             document.getElementById('modalColaborador').classList.remove('active');
         }
 
-        function salvarColaborador() {
+        async function salvarColaborador() {
             const novoColaborador = {
-                id: colaboradores.length + 1,
                 nome: document.getElementById('modalColabNome')?.value || 'Novo Colaborador',
                 cpf: document.getElementById('modalColabCPF')?.value || '',
                 rg: document.getElementById('modalColabRG')?.value || '',
@@ -1960,20 +2077,33 @@
                 endereco: document.getElementById('modalColabEndereco')?.value || ''
             };
             
-            colaboradores.push(novoColaborador);
-            preencherTabelas();
-            preencherSelects();
-            salvarDados();
-            fecharModalColaborador();
-            alert('Colaborador cadastrado com sucesso!');
-        }
-
-        function excluirColaborador(id) {
-            if (confirm('Tem certeza que deseja excluir este colaborador?')) {
-                colaboradores = colaboradores.filter(c => c.id !== id);
+            try {
+                const docRef = await db.collection('colaboradores').add(novoColaborador);
+                novoColaborador.id = docRef.id;
+                colaboradores.push(novoColaborador);
                 preencherTabelas();
                 preencherSelects();
                 salvarDados();
+                fecharModalColaborador();
+                alert('Colaborador cadastrado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar colaborador:', error);
+                alert('Erro ao salvar colaborador. Tente novamente.');
+            }
+        }
+
+        async function excluirColaborador(id) {
+            if (confirm('Tem certeza que deseja excluir este colaborador?')) {
+                try {
+                    await db.collection('colaboradores').doc(id).delete();
+                    colaboradores = colaboradores.filter(c => c.id !== id);
+                    preencherTabelas();
+                    preencherSelects();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir colaborador:', error);
+                    alert('Erro ao excluir colaborador. Tente novamente.');
+                }
             }
         }
 
@@ -1989,9 +2119,8 @@
             document.getElementById('modalDepartamento').classList.remove('active');
         }
 
-        function salvarDepartamento() {
+        async function salvarDepartamento() {
             const novoDepartamento = {
-                id: departamentos.length + 1,
                 nome: document.getElementById('modalDepNome')?.value || 'Novo Departamento',
                 centroCusto: document.getElementById('modalDepCentroCusto')?.value || '',
                 gestor: document.getElementById('modalDepGestor')?.value || '',
@@ -2001,20 +2130,33 @@
                 status: document.getElementById('modalDepStatus')?.value || 'Ativo'
             };
             
-            departamentos.push(novoDepartamento);
-            preencherTabelas();
-            preencherSelects();
-            salvarDados();
-            fecharModalDepartamento();
-            alert('Departamento cadastrado com sucesso!');
-        }
-
-        function excluirDepartamento(id) {
-            if (confirm('Tem certeza que deseja excluir este departamento?')) {
-                departamentos = departamentos.filter(d => d.id !== id);
+            try {
+                const docRef = await db.collection('departamentos').add(novoDepartamento);
+                novoDepartamento.id = docRef.id;
+                departamentos.push(novoDepartamento);
                 preencherTabelas();
                 preencherSelects();
                 salvarDados();
+                fecharModalDepartamento();
+                alert('Departamento cadastrado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao salvar departamento:', error);
+                alert('Erro ao salvar departamento. Tente novamente.');
+            }
+        }
+
+        async function excluirDepartamento(id) {
+            if (confirm('Tem certeza que deseja excluir este departamento?')) {
+                try {
+                    await db.collection('departamentos').doc(id).delete();
+                    departamentos = departamentos.filter(d => d.id !== id);
+                    preencherTabelas();
+                    preencherSelects();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir departamento:', error);
+                    alert('Erro ao excluir departamento. Tente novamente.');
+                }
             }
         }
 
@@ -2022,7 +2164,7 @@
             alert('Função de edição em desenvolvimento');
         }
 
-        function adicionarApontamento() {
+        async function adicionarApontamento() {
             const colaborador = document.getElementById('apontamentoColaborador')?.value;
             if (!colaborador) {
                 alert('Selecione um colaborador!');
@@ -2030,7 +2172,6 @@
             }
             
             const novoApontamento = {
-                id: apontamentos.length + 1,
                 colaborador: colaborador,
                 tipo: document.getElementById('apontamentoTipo')?.value || 'Outros',
                 valor: parseFloat(document.getElementById('apontamentoValor')?.value) || 0,
@@ -2041,23 +2182,36 @@
                 checklist: {}
             };
             
-            apontamentos.push(novoApontamento);
-            preencherTabelaApontamentos();
-            salvarDados();
-            atualizarDashboard();
-            
-            document.getElementById('apontamentoValor').value = '';
-            document.getElementById('apontamentoObs').value = '';
-            
-            alert('Apontamento adicionado com sucesso!');
-        }
-
-        function excluirApontamento(id) {
-            if (confirm('Tem certeza que deseja excluir este apontamento?')) {
-                apontamentos = apontamentos.filter(a => a.id !== id);
+            try {
+                const docRef = await db.collection('apontamentos').add(novoApontamento);
+                novoApontamento.id = docRef.id;
+                apontamentos.push(novoApontamento);
                 preencherTabelaApontamentos();
                 salvarDados();
                 atualizarDashboard();
+                
+                document.getElementById('apontamentoValor').value = '';
+                document.getElementById('apontamentoObs').value = '';
+                
+                alert('Apontamento adicionado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao adicionar apontamento:', error);
+                alert('Erro ao adicionar apontamento. Tente novamente.');
+            }
+        }
+
+        async function excluirApontamento(id) {
+            if (confirm('Tem certeza que deseja excluir este apontamento?')) {
+                try {
+                    await db.collection('apontamentos').doc(id).delete();
+                    apontamentos = apontamentos.filter(a => a.id !== id);
+                    preencherTabelaApontamentos();
+                    salvarDados();
+                    atualizarDashboard();
+                } catch (error) {
+                    console.error('Erro ao excluir apontamento:', error);
+                    alert('Erro ao excluir apontamento. Tente novamente.');
+                }
             }
         }
 
@@ -2065,13 +2219,21 @@
             alert('Função de edição em desenvolvimento');
         }
 
-        function toggleCheckApontamento(id) {
+        async function toggleCheckApontamento(id) {
             const apontamento = apontamentos.find(a => a.id === id);
             if (apontamento) {
                 apontamento.checklist = apontamento.checklist || {};
                 apontamento.checklist.concluido = !apontamento.checklist.concluido;
-                salvarDados();
-                atualizarDashboard();
+                
+                try {
+                    await db.collection('apontamentos').doc(id).update({
+                        checklist: apontamento.checklist
+                    });
+                    salvarDados();
+                    atualizarDashboard();
+                } catch (error) {
+                    console.error('Erro ao atualizar checklist:', error);
+                }
             }
         }
 
@@ -2167,7 +2329,7 @@
             alert('Férias calculadas com sucesso!');
         }
 
-        function adicionarAtestado() {
+        async function adicionarAtestado() {
             const colaborador = document.getElementById('atestadoColaborador')?.value;
             if (!colaborador) {
                 alert('Selecione um colaborador!');
@@ -2190,7 +2352,6 @@
             document.getElementById('atestadoDias').value = diffDays;
             
             const novoAtestado = {
-                id: atestados.length + 1,
                 colaborador: colaborador,
                 dataInicio: dataInicio,
                 dataFim: dataFim,
@@ -2199,27 +2360,40 @@
                 medico: document.getElementById('atestadoMedico')?.value || ''
             };
             
-            atestados.push(novoAtestado);
-            preencherTabelaAtestados();
-            salvarDados();
-            
-            document.getElementById('atestadoDataInicio').value = '';
-            document.getElementById('atestadoDataFim').value = '';
-            document.getElementById('atestadoCID').value = '';
-            document.getElementById('atestadoMedico').value = '';
-            
-            alert('Atestado registrado com sucesso!');
-        }
-
-        function excluirAtestado(id) {
-            if (confirm('Tem certeza que deseja excluir este atestado?')) {
-                atestados = atestados.filter(a => a.id !== id);
+            try {
+                const docRef = await db.collection('atestados').add(novoAtestado);
+                novoAtestado.id = docRef.id;
+                atestados.push(novoAtestado);
                 preencherTabelaAtestados();
                 salvarDados();
+                
+                document.getElementById('atestadoDataInicio').value = '';
+                document.getElementById('atestadoDataFim').value = '';
+                document.getElementById('atestadoCID').value = '';
+                document.getElementById('atestadoMedico').value = '';
+                
+                alert('Atestado registrado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao registrar atestado:', error);
+                alert('Erro ao registrar atestado. Tente novamente.');
             }
         }
 
-        function adicionarPensaoJudicial() {
+        async function excluirAtestado(id) {
+            if (confirm('Tem certeza que deseja excluir este atestado?')) {
+                try {
+                    await db.collection('atestados').doc(id).delete();
+                    atestados = atestados.filter(a => a.id !== id);
+                    preencherTabelaAtestados();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir atestado:', error);
+                    alert('Erro ao excluir atestado. Tente novamente.');
+                }
+            }
+        }
+
+        async function adicionarPensaoJudicial() {
             const colaborador = document.getElementById('pensaoJudicialColaborador')?.value;
             if (!colaborador) {
                 alert('Selecione um colaborador!');
@@ -2237,7 +2411,6 @@
             }
             
             const novaPensao = {
-                id: pensoes.length + 1,
                 colaborador: colaborador,
                 tipo: tipo,
                 percentual: percentual,
@@ -2246,27 +2419,40 @@
                 cpfBeneficiario: document.getElementById('pensaoCPF')?.value || ''
             };
             
-            pensoes.push(novaPensao);
-            preencherTabelaPensoes();
-            salvarDados();
-            
-            document.getElementById('pensaoPercentual').value = '';
-            document.getElementById('pensaoValorFixo').value = '';
-            document.getElementById('pensaoBeneficiario').value = '';
-            document.getElementById('pensaoCPF').value = '';
-            
-            alert('Pensão registrada com sucesso!');
-        }
-
-        function excluirPensao(id) {
-            if (confirm('Tem certeza que deseja excluir esta pensão?')) {
-                pensoes = pensoes.filter(p => p.id !== id);
+            try {
+                const docRef = await db.collection('pensoes').add(novaPensao);
+                novaPensao.id = docRef.id;
+                pensoes.push(novaPensao);
                 preencherTabelaPensoes();
                 salvarDados();
+                
+                document.getElementById('pensaoPercentual').value = '';
+                document.getElementById('pensaoValorFixo').value = '';
+                document.getElementById('pensaoBeneficiario').value = '';
+                document.getElementById('pensaoCPF').value = '';
+                
+                alert('Pensão registrada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao registrar pensão:', error);
+                alert('Erro ao registrar pensão. Tente novamente.');
             }
         }
 
-        function adicionarEmprestimoConsignado() {
+        async function excluirPensao(id) {
+            if (confirm('Tem certeza que deseja excluir esta pensão?')) {
+                try {
+                    await db.collection('pensoes').doc(id).delete();
+                    pensoes = pensoes.filter(p => p.id !== id);
+                    preencherTabelaPensoes();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir pensão:', error);
+                    alert('Erro ao excluir pensão. Tente novamente.');
+                }
+            }
+        }
+
+        async function adicionarEmprestimoConsignado() {
             const colaborador = document.getElementById('emprestimoConsignadoColaborador')?.value;
             if (!colaborador) {
                 alert('Selecione um colaborador!');
@@ -2274,7 +2460,6 @@
             }
             
             const novoEmprestimo = {
-                id: emprestimos.length + 1,
                 colaborador: colaborador,
                 banco: document.getElementById('emprestimoBanco')?.value || '',
                 contrato: document.getElementById('emprestimoContrato')?.value || '',
@@ -2285,28 +2470,41 @@
                 status: document.getElementById('emprestimoStatus')?.value || 'Ativo'
             };
             
-            emprestimos.push(novoEmprestimo);
-            preencherTabelaEmprestimos();
-            salvarDados();
-            
-            document.getElementById('emprestimoBanco').value = '';
-            document.getElementById('emprestimoContrato').value = '';
-            document.getElementById('emprestimoValorTotal').value = '';
-            document.getElementById('emprestimoValorParcela').value = '';
-            document.getElementById('emprestimoParcelasPagas').value = '0';
-            
-            alert('Empréstimo registrado com sucesso!');
-        }
-
-        function excluirEmprestimo(id) {
-            if (confirm('Tem certeza que deseja excluir este empréstimo?')) {
-                emprestimos = emprestimos.filter(e => e.id !== id);
+            try {
+                const docRef = await db.collection('emprestimos').add(novoEmprestimo);
+                novoEmprestimo.id = docRef.id;
+                emprestimos.push(novoEmprestimo);
                 preencherTabelaEmprestimos();
                 salvarDados();
+                
+                document.getElementById('emprestimoBanco').value = '';
+                document.getElementById('emprestimoContrato').value = '';
+                document.getElementById('emprestimoValorTotal').value = '';
+                document.getElementById('emprestimoValorParcela').value = '';
+                document.getElementById('emprestimoParcelasPagas').value = '0';
+                
+                alert('Empréstimo registrado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao registrar empréstimo:', error);
+                alert('Erro ao registrar empréstimo. Tente novamente.');
             }
         }
 
-        function adicionarCoparticipacao() {
+        async function excluirEmprestimo(id) {
+            if (confirm('Tem certeza que deseja excluir este empréstimo?')) {
+                try {
+                    await db.collection('emprestimos').doc(id).delete();
+                    emprestimos = emprestimos.filter(e => e.id !== id);
+                    preencherTabelaEmprestimos();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir empréstimo:', error);
+                    alert('Erro ao excluir empréstimo. Tente novamente.');
+                }
+            }
+        }
+
+        async function adicionarCoparticipacao() {
             const colaborador = document.getElementById('copartColaborador')?.value;
             if (!colaborador) {
                 alert('Selecione um colaborador!');
@@ -2320,7 +2518,6 @@
             document.getElementById('copartTotal').value = total.toFixed(2);
             
             const novaCoparticipacao = {
-                id: coparticipacoes.length + 1,
                 colaborador: colaborador,
                 competencia: document.getElementById('competenciaGlobal')?.value || '2025-02',
                 valor: valor,
@@ -2330,22 +2527,35 @@
                 obs: document.getElementById('copartObs')?.value || ''
             };
             
-            coparticipacoes.push(novaCoparticipacao);
-            preencherTabelaCoparticipacao();
-            salvarDados();
-            
-            document.getElementById('copartValor').value = '';
-            document.getElementById('copartParcelamento').value = '';
-            document.getElementById('copartObs').value = '';
-            
-            alert('Coparticipação registrada com sucesso!');
-        }
-
-        function excluirCoparticipacao(id) {
-            if (confirm('Tem certeza que deseja excluir esta coparticipação?')) {
-                coparticipacoes = coparticipacoes.filter(c => c.id !== id);
+            try {
+                const docRef = await db.collection('coparticipacoes').add(novaCoparticipacao);
+                novaCoparticipacao.id = docRef.id;
+                coparticipacoes.push(novaCoparticipacao);
                 preencherTabelaCoparticipacao();
                 salvarDados();
+                
+                document.getElementById('copartValor').value = '';
+                document.getElementById('copartParcelamento').value = '';
+                document.getElementById('copartObs').value = '';
+                
+                alert('Coparticipação registrada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao registrar coparticipação:', error);
+                alert('Erro ao registrar coparticipação. Tente novamente.');
+            }
+        }
+
+        async function excluirCoparticipacao(id) {
+            if (confirm('Tem certeza que deseja excluir esta coparticipação?')) {
+                try {
+                    await db.collection('coparticipacoes').doc(id).delete();
+                    coparticipacoes = coparticipacoes.filter(c => c.id !== id);
+                    preencherTabelaCoparticipacao();
+                    salvarDados();
+                } catch (error) {
+                    console.error('Erro ao excluir coparticipação:', error);
+                    alert('Erro ao excluir coparticipação. Tente novamente.');
+                }
             }
         }
 
@@ -2403,10 +2613,7 @@
         });
 
         window.onload = function() {
-            inicializarDados();
-            preencherSelects();
-            preencherTabelas();
-            preencherTodosChecklists();
+            carregarDadosFirebase();
         };
     </script>
 </body>
